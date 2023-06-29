@@ -14,7 +14,7 @@ This is a Python script that uses OCR (Optical Character Recognition) to extract
 ## Installation
 
 1. Clone this repository to your local machine.
-2. Install the required Python libraries by running the following command in your terminal or command prompt:
+2. Install the required Python libraries by running the following command in your terminal or command prompt: pip install -r requirements.txt
 3. Install the Tesseract OCR engine by following the instructions provided at [Tesseract OCR](https://github.com/tesseract-ocr/tesseract).
 4. Update the database connection details in the script (`host`, `user`, `password`, `db_name`) to match your MySQL server configuration.
 
