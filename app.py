@@ -5,7 +5,7 @@ import pytesseract
 from PIL import Image
 import re
 import streamlit as st
-from io import BytesIO
+import io
 
 #Create mySQL function to run the queries
 def create_server_connection(host_name,user_name,user_password):
@@ -202,7 +202,11 @@ if submit:
     else:
         UID=temp+1
     
-    sql_img=img.tobytes()
+    bytes_io = io.BytesIO()
+    img.save(bytes_io, format='PNG')
+    sql_img=bytes_io.getvalue()
+    bytes_io.close()
+    
     mycursor.execute(
          """insert into card_data(UID, Company_name, Name, Designation,
          Phone1, Phone2, Email, Website, Area, City, State, Pincode,
@@ -234,118 +238,130 @@ selected_ID=st.selectbox(
     'Select the UID of data you want to Update/Delete:',
     UID_list
     )
-st.write(f'Details of selected ID (UID no. {selected_ID}):')
-#mycursor.execute(
-#    """select Image from card_data where UID=%s""",
-#    (selected_ID,)
-#    )
-#img1_data=mycursor.fetchone()
-#connection.commit()
-#img1=Image.open(BytesIO(img1_data[0]))
+
+
+mycursor.execute(
+    """select Image from card_data where UID=%s""",
+    (selected_ID,)
+    )
+img1_data=mycursor.fetchone()
+connection.commit()
+if img1_data==None:
+    img1=1
+else:
+    img1=Image.open(io.BytesIO(img1_data[0]))
 
 #Display all the data of the selected UID
-Company1=st.text_input(
-    'Company Name: ',
-    data.loc[data['UID']==selected_ID,'Company_Name'].values[0]
-    )
+if img1!=1:
+    st.write(f'Details of selected ID (UID no. {selected_ID}):')
+    st.write('#### Uploaded Image:')
+    st.image(img1)
 
-col1,col2=st.columns(2)
-with col1:
-    name1=st.text_input(
-        'Name: ',
-        data.loc[data['UID']==selected_ID,'Name'].values[0]
+    Company1=st.text_input(
+        'Company Name: ',
+        data.loc[data['UID']==selected_ID,'Company_Name'].values[0]
         )
 
-with col2:
-    desig1=st.text_input(
-        'Designation: ',
-        data.loc[data['UID']==selected_ID,'Designation'].values[0]
-        )
-
-col1,col2=st.columns(2)
-with col1:
-    phone_number1_1=st.text_input(
-        'Phone no. 1: ',
-        data.loc[data['UID']==selected_ID,'Phone1'].values[0]
-        )
-
-with col2:
-    phone_number2_1=st.text_input(
-        'Phone no. 2: ',
-        data.loc[data['UID']==selected_ID,'Phone2'].values[0]
-        )
-
-col1,col2=st.columns(2)
-with col1:
-    email_address1=st.text_input(
-        'Email ID: ',
-        data.loc[data['UID']==selected_ID,'Email'].values[0]
-        )
-
-with col2:
-    site1=st.text_input(
-        'Webpage: ',
-        data.loc[data['UID']==selected_ID,'Website'].values[0]
-        )
-
-col1,col2=st.columns(2)
-with col1:
-    Area1=st.text_input(
-        'Area: ',
-        data.loc[data['UID']==selected_ID,'Area'].values[0]
-        )
-
-with col2:
-    City1=st.text_input(
-        'City: ',
-        data.loc[data['UID']==selected_ID,'City'].values[0]
-        )
-
-col1,col2=st.columns(2)
-with col1:
-    State1=st.text_input(
-        'State: ',
-        data.loc[data['UID']==selected_ID,'State'].values[0]
-        )
-
-with col2:
-    pin1=st.text_input(
-        'Pincode: ',
-        data.loc[data['UID']==selected_ID,'Pincode'].values[0]
-        )
-
-col1,col2=st.columns(2)
-
-#User can choose to update record
-with col1:    
-    if st.button('Update Details'):
-        mycursor.execute(
-            """update card_data set Company_Name=%s, Name=%s, Designation=%s,
-            Phone1=%s, Phone2=%s, Email=%s, Website=%s, Area=%s, City=%s,
-            State=%s, Pincode=%s where UID=%s""",
-            (Company1, name1, desig1, phone_number1_1, phone_number2_1,
-             email_address1, site1, Area1, City1, State1, pin1, selected_ID)
+    col1,col2=st.columns(2)
+    with col1:
+        name1=st.text_input(
+            'Name: ',
+            data.loc[data['UID']==selected_ID,'Name'].values[0]
             )
-        connection.commit()
-        st.success('Details Updated!')
 
-#User can choose to delete record
-with col2:
-    if st.button('Delete record'):
-        mycursor.execute(
-            f"""delete from card_data where UID={selected_ID}"""
+    with col2:
+        desig1=st.text_input(
+            'Designation: ',
+            data.loc[data['UID']==selected_ID,'Designation'].values[0]
             )
-        connection.commit()
-        st.success('Record deleted!')
 
-#Display the database
-mycursor.execute(
-    """select * from card_data"""
-    )
-rows=mycursor.fetchall()
-connection.commit()
-column_names = [desc[0] for desc in mycursor.description]
-data = pd.DataFrame(rows, columns=column_names)
+    col1,col2=st.columns(2)
+    with col1:
+        phone_number1_1=st.text_input(
+            'Phone no. 1: ',
+            data.loc[data['UID']==selected_ID,'Phone1'].values[0]
+            )
 
-st.write('## Database:')
-st.dataframe(data.iloc[:,:-2])
+    with col2:
+        phone_number2_1=st.text_input(
+            'Phone no. 2: ',
+            data.loc[data['UID']==selected_ID,'Phone2'].values[0]
+            )
+
+    col1,col2=st.columns(2)
+    with col1:
+        email_address1=st.text_input(
+            'Email ID: ',
+            data.loc[data['UID']==selected_ID,'Email'].values[0]
+            )
+    
+    with col2:
+        site1=st.text_input(
+            'Webpage: ',
+            data.loc[data['UID']==selected_ID,'Website'].values[0]
+            )
+    
+    col1,col2=st.columns(2)
+    with col1:
+        Area1=st.text_input(
+            'Area: ',
+            data.loc[data['UID']==selected_ID,'Area'].values[0]
+            )
+    
+    with col2:
+        City1=st.text_input(
+            'City: ',
+            data.loc[data['UID']==selected_ID,'City'].values[0]
+            )
+    
+    col1,col2=st.columns(2)
+    with col1:
+        State1=st.text_input(
+            'State: ',
+            data.loc[data['UID']==selected_ID,'State'].values[0]
+            )
+    
+    with col2:
+        pin1=st.text_input(
+            'Pincode: ',
+            data.loc[data['UID']==selected_ID,'Pincode'].values[0]
+            )
+    
+    col1,col2=st.columns(2)
+    
+    #User can choose to update record
+    with col1:    
+        if st.button('Update Details'):
+            mycursor.execute(
+                """update card_data set Company_Name=%s, Name=%s, Designation=%s,
+                Phone1=%s, Phone2=%s, Email=%s, Website=%s, Area=%s, City=%s,
+                State=%s, Pincode=%s where UID=%s""",
+                (Company1, name1, desig1, phone_number1_1, phone_number2_1,
+                 email_address1, site1, Area1, City1, State1, pin1, selected_ID)
+                )
+            connection.commit()
+            st.success('Details Updated!')
+    
+    #User can choose to delete record
+    with col2:
+        if st.button('Delete record'):
+            mycursor.execute(
+                f"""delete from card_data where UID={selected_ID}"""
+                )
+            connection.commit()
+            st.success('Record deleted!')
+    
+    #Display the database
+    mycursor.execute(
+        """select * from card_data"""
+        )
+    rows=mycursor.fetchall()
+    connection.commit()
+    column_names = [desc[0] for desc in mycursor.description]
+    data = pd.DataFrame(rows, columns=column_names)
+    
+    st.write('## Database:')
+    st.dataframe(data.iloc[:,:-2])
+
+else:
+    st.warning('### Database is currently empty!')
